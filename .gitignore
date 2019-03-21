@@ -1,3 +1,5 @@
 venv/
 .idea/
 oauth_dev.py
+usersWithOAuth.db
+*.pyc

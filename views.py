@@ -79,12 +79,10 @@ def login(provider):
         if 'code' not in request.args:
             abort(400)
 
-        redirect_uri = 'http://localhost:5000/facebook/login'
-
         params = {'code': request.args['code'],
                   'client_id': FACEBOOK_CLIENT_ID,
                   'client_secret': FACEBOOK_SECRET,
-                  'redirect_uri': redirect_uri
+                  'redirect_uri': FACEBOOK_REDIRECT_URI
                   }
         response = requests.get(FACEBOOK_ACCESS_TOKEN_URL, params=params)
         response = json.loads(response.text)
@@ -105,12 +103,11 @@ def login(provider):
         if 'code' not in request.args:
             abort(400)
 
-        redirect_uri = 'http://localhost:5000/google/login'
         params = {'grant_type': 'authorization_code',
-                   'code': request.args['code'],
-                   'client_id': GOOGLE_PLUS_CLIENT_ID,
-                   'client_secret': GOOGLE_PLUS_SECRET,
-                   'redirect_uri': redirect_uri
+                  'code': request.args['code'],
+                  'client_id': GOOGLE_PLUS_CLIENT_ID,
+                  'client_secret': GOOGLE_PLUS_SECRET,
+                  'redirect_uri': GOOGLE_REDIRECT_URI
                    }
         response = requests.post(GOOGLE_PLUS_ACCESS_TOKEN_URL, data=params);
         response = json.loads(response.text)
