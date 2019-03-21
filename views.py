@@ -111,6 +111,7 @@ def login(provider):
                    }
         response = requests.post(GOOGLE_PLUS_ACCESS_TOKEN_URL, data=params);
         response = json.loads(response.text)
+        print response
 
         params = {'alt': 'json', 'access_token': response['access_token']}
         response = requests.get('https://www.googleapis.com/oauth2/v1/userinfo', params=params)
