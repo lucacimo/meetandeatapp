@@ -449,5 +449,5 @@ def meetup_handler(id):
 
 if __name__ == '__main__':
     app.debug = True
-    app.config['SECRET_KEY'] = SECRET_KEY
+    app.config['SECRET_KEY'] = APP_SECRET_KEY
     app.run()
