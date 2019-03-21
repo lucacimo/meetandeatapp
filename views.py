@@ -2,12 +2,18 @@ from models import Base, User, Request, Proposal, Meetup
 from flask import Flask, jsonify, request, abort, g, render_template
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy import create_engine
-from oauth import facebook, googleplus
-
-from flask.ext.httpauth import HTTPBasicAuth
 import json
+import os
 import requests
-from utilities import geo_location, valid_meal_time, valid_date_and_time
+from utilities import valid_meal_time, valid_date_and_time
+import httplib2
+from flask_httpauth import HTTPBasicAuth
+
+if os.getenv("PRODUCTION"):
+    from oauth_prod import *
+else:
+    from oauth_dev import *
+
 
 auth = HTTPBasicAuth()
 
@@ -18,8 +24,18 @@ DBSession = sessionmaker(bind=engine)
 session = DBSession()
 app = Flask(__name__)
 
-FOURSQUARE_CLIENT_ID = 'NR3JDICWIRELVJCHGT4JWJJIV2NROPO5NEUXGCBNQZDAXLTJ'
-FOURSQUARE_SECRET = 'JLLLEYAFKXWACLTNOA4HKPF1JI201W30AK5LFHSQWH55UNSE'
+
+def geo_location(location):
+
+    location = location.replace(" ", "")
+    url = 'https://maps.googleapis.com/maps/api/geocode/json?&address=%s&key=%s' % (location, GOOGLE_MAPS_API_KEY)
+    r = httplib2.Http()
+    result = json.loads(r.request(url, 'GET')[1])
+
+    lat = "{0:.2f}".format(result['results'][0]['geometry']['location']['lat'])
+    lon = "{0:.2f}".format(result['results'][0]['geometry']['location']['lng'])
+
+    return lat, lon
 
 
 def add_and_commit(obj):
@@ -28,7 +44,6 @@ def add_and_commit(obj):
         session.commit()
     except:
         session.rollback()
-        raise
 
 
 def delete_and_commit(obj):
@@ -37,7 +52,6 @@ def delete_and_commit(obj):
         session.commit()
     except:
         session.rollback()
-        raise
 
 
 @auth.verify_password
@@ -66,14 +80,21 @@ def login(provider):
             abort(400)
 
         redirect_uri = 'http://localhost:5000/facebook/login'
-        data = dict(code=request.args['code'], redirect_uri=redirect_uri)
-        user = facebook.get_auth_session(data=data, decoder=json.loads)
-        me = user.get('me').json()
 
-        params = {'fields': 'name,email,picture'}
+        params = {'code': request.args['code'],
+                  'client_id': FACEBOOK_CLIENT_ID,
+                  'client_secret': FACEBOOK_SECRET,
+                  'redirect_uri': redirect_uri
+                  }
+        response = requests.get(FACEBOOK_ACCESS_TOKEN_URL, params=params)
+        response = json.loads(response.text)
+
+        params = {'fields': 'name,email,picture',
+                  'access_token': response['access_token']
+                  }
+
         headers = {'Accept': '"application/json'}
-        url = 'https://graph.facebook.com/v2.10/%s' % me['id']
-        response = user.get(url=url, params=params, headers=headers)
+        response = requests.get('https://graph.facebook.com/me', params=params, headers=headers)
         response = json.loads(response.text)
 
         name = response['name']
@@ -85,17 +106,23 @@ def login(provider):
             abort(400)
 
         redirect_uri = 'http://localhost:5000/google/login'
-        data = dict(code=request.args['code'], redirect_uri=redirect_uri, grant_type='authorization_code')
-        user = googleplus.get_auth_session(data=data, decoder=json.loads)
+        params = {'grant_type': 'authorization_code',
+                   'code': request.args['code'],
+                   'client_id': GOOGLE_PLUS_CLIENT_ID,
+                   'client_secret': GOOGLE_PLUS_SECRET,
+                   'redirect_uri': redirect_uri
+                   }
+        response = requests.post(GOOGLE_PLUS_ACCESS_TOKEN_URL, data=params);
+        response = json.loads(response.text)
 
-        url = "https://www.googleapis.com/oauth2/v1/userinfo"
-        response = user.get(url=url)
+        params = {'alt': 'json', 'access_token': response['access_token']}
+        response = requests.get('https://www.googleapis.com/oauth2/v1/userinfo', params=params)
         response = json.loads(response.text)
 
         name = response['name']
         picture = response['picture']
         email = response['email']
-
+    #
     user = session.query(User).filter_by(email=email).first()
     if not user:
         user = User(username=name, picture=picture, email=email)
@@ -422,7 +449,8 @@ def meetup_handler(id):
         delete_and_commit(meetup)
         return jsonify(meetup.serialize)
 
+
 if __name__ == '__main__':
     app.debug = True
-    # app.config['SECRET_KEY'] = ''.join(random.choice(string.ascii_uppercase + string.digits) for x in xrange(32))
-    app.run(host='localhost', port=5000)
+    app.config['SECRET_KEY'] = SECRET_KEY
+    app.run()

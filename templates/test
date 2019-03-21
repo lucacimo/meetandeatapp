@@ -1,0 +1,2 @@
+https://accounts.google.com/o/oauth2/auth?scope=https://www.googleapis.com/auth/userinfo.profile+https://www.googleapis.com/auth/userinfo.email&response_type=code&access_type=offline&redirect_uri=http://localhost:5000/google/login&client_id=406517679482-csmg9optk2mtujjqk8kg0ohtola4ob2n.apps.googleusercontent.com
+https://www.facebook.com/v3.2/dialog/oauth?client_id=1854520568210189&redirect_uri=http://localhost:5000/facebook/login&state=st=state123abc,ds=123456789&scope=email

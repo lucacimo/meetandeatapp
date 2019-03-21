@@ -136,6 +136,7 @@ class Meetup(Base):
             'date_and_time': self.date_and_time
         }
 
+
 engine = create_engine('sqlite:///usersWithOAuth.db')
 
 Base.metadata.create_all(engine)
