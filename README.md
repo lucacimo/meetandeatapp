@@ -9,6 +9,8 @@ restaurant for users and geocode locations into latitude and longitude coordinat
 OAuth provider like Google or Facebook. The application should generate it’s own
 tokens for users.
 
+https://meetandeatapp.herokuapp.com/
+
 ### Endpoints
 HTTP Verb | Example URI | Description | Parameters | Logic/Security
 ------------ | ------------- | ------------- | ------------- | -------------
@@ -41,7 +43,7 @@ Local
 mkdir meetandeatapp
 cd meetandeatapp
 virtualenv -p pythonpath venv
-source my_pr/bin/activate
+source venv/bin/activate
 pip install -r requirements.txt
 python views.py
 ```
