@@ -1,88 +1,80 @@
-# Project Title
+# Overview
+Meet & Eat is a social application for meeting people based on their food interests. The API backend is implemented using the Flask framework.
 
-One Paragraph of project description goes here
+## Features
+● Meet & Eat should leverage the Google Maps API and Foursquare API in order to find a
+restaurant for users and geocode locations into latitude and longitude coordinates.
 
-## Getting Started
+● Users should be able to log in with either a username/password combination or using an
+OAuth provider like Google or Facebook. The application should generate it’s own
+tokens for users.
 
-These instructions will get you a copy of the project up and running on your local machine for development and testing purposes. See deployment for notes on how to deploy the project on a live system.
-
-### Prerequisites
-
-What things you need to install the software and how to install them
-
-```
-Give examples
-```
+### Endpoints
+HTTP Verb | Example URI | Description | Parameters | Logic/Security
+------------ | ------------- | ------------- | ------------- | -------------
+**POST** | *api/v1/\<provider\>/login* | Allows logging into a specific OAuth provider and returns an access token to the client. | - One-time Auto code | Server looks up user based upon the email address associated with the access token to identify user. <br> If no user exists, then a new one is created.
+**POST** | *api/v1/\<provider\>/logout* | Allows logging out of an application and rejects an access token. | - Token | Server looks up user based upon the email address associated with the access token to identify user. <br> It user doesn't exist, return an error.
+**GET** | *api/v1/users* | Returns profile information off all users in the database. | - Token | Only logged in users can view user profiles. 
+**POST** | *api/v1/users* | Creates a new user without using OAuth. | - username <br> - password | highly recommended to implement secure HTTP if this endpoint is implemented. <br> As long as an existing username isn't in the database, create a new user, otherwise, return an appropriate error.
+**PUT** | *api/v1/users/* | Updates a specific user's information. | - Token <br> - new user profile information | Server checks token to make sure only the logged in user can update its profile.
+**GET** | *api/v1/users/\<int:id\>* | Returns information for a specific user. | - Token | Only logged in users can view profile information. 
+**DELETE** | *api/v1/users/* | Removes a user account. | - Token | Only the user with the correct token can erase its account. 
+**GET** | *api/v1/requests* | Shows all open meetup requests. | - Token | Only logged in users can view all open requests. <br> **Advanced feature**: a user should now see their own requests, only everyone else's. 
+**POST** | *api/v1/requests* | Makes a new meetup request. | - Token <br> - meetup request information | Only logged in users can make meetup requests. The id of the maker of the request is stored in each request object. 
+**GET** | *api/v1/requests/\<int:id\>* | Returns information for a specific meetup request. | - Token | Only logged in users can view the details of a meetup request. 
+**PUT** | *api/v1/requests/\<int:id\>* | Updates information about a meetup request. | - Token <br> - new meetup request information | Only the original maker of the request should be able to edit it. 
+**DELETE** | *api/v1/requests/\<int:id\>* | Deletes a specific meetup request. | - Token | Only the original maker of the request should be able to delete it.
+**POST** | *api/v1/proposals* | Creates a new proposal to meetup on behalf of a user | -Token <br> -request_id | User is verified by the provided token and identified as the maker of the proposal.
+**GET** | *api/v1/proposals/\<int:id\>* | Retrieves information about a specific proposal. | - Token | The id of the user should match either the proposal maker or recipient in order to access this view.
+**PUT** | *api/v1/proposals/\<int:id\>* | Updates information about a specific proposal. | - Token <br> - New proposal information | The id of the user should match the proposal maker in order to access this view.
+**DELETE** | *api/v1/proposals/\<int:id\>* | Deletes a specific proposal. | - Token | The id of the user should match the proposal maker in order to delete a proposal.
+**GET** | *api/v1/dates* | Gets all dates for a corresponding user. | - Token | Only the dates that contain the user id as one of the participants should be viewable by that user.
+**POST** | *api/v1/dates* | Creates a date request on behalf of a user | -Token <br> Boolean | If True, the recipient of a proposal has accepted this offer and is requesting that the server create a date. If false, the recipient of a proposal rejected a date and the proposal is deleted.
+**GET** | *api/v1/dates/\<int:id\>* | Gets information about a specific date | -Token | Only dates where a user is a participant should appear in this view.
+**PUT** | *api/v1/dates/\<int:id\>* | Edits information about a specific date | - Token <br> - New date information | Only participants in the date can update the date details.
+**DELETE** | *api/v1/dates/\<int:id\>* | Removes a specific date | Token | Only participants in the date can delete a date object.
 
 ### Installing
-
-A step by step series of examples that tell you how to get a development env running
-
-Say what the step will be
+Local
 
 ```
-Give the example
+mkdir meetandeatapp
+cd meetandeatapp
+virtualenv -p pythonpath venv
+source my_pr/bin/activate
+pip install -r requirements.txt
+python views.py
 ```
 
-And repeat
 
+
+## Deployment on Heroku
 ```
-until finished
+heroku login
+heroku create meetandeatapp --buildpack heroku/python
+heroku git:remote -a meetandeatapp
+git add .
+git commit -m "First commit for heroku"
+git push heroku master
 ```
-
-End with an example of getting some data out of the system or using it for a little demo
-
-## Running the tests
-
-Explain how to run the automated tests for this system
-
-### Break down into end to end tests
-
-Explain what these tests test and why
-
+Set the following environment variables: 
 ```
-Give an example
+FACEBOOK_CLIENT_ID 
+FACEBOOK_SECRET 
+FACEBOOK_ACCESS_TOKEN_URL 
+
+GOOGLE_PLUS_CLIENT_ID 
+GOOGLE_PLUS_SECRET 
+GOOGLE_PLUS_ACCESS_TOKEN_URL 
+
+FACEBOOK_REDIRECT_URI 
+GOOGLE_REDIRECT_URI 
+
+FOURSQUARE_CLIENT_ID 
+FOURSQUARE_SECRET 
+
+GOOGLE_MAPS_API_KEY 
+APP_SECRET_KEY 
+
+PRODUCTION
 ```
-
-### And coding style tests
-
-Explain what these tests test and why
-
-```
-Give an example
-```
-
-## Deployment
-
-Add additional notes about how to deploy this on a live system
-
-## Built With
-
-* [Dropwizard](http://www.dropwizard.io/1.0.2/docs/) - The web framework used
-* [Maven](https://maven.apache.org/) - Dependency Management
-* [ROME](https://rometools.github.io/rome/) - Used to generate RSS Feeds
-
-## Contributing
-
-Please read [CONTRIBUTING.md](https://gist.github.com/PurpleBooth/b24679402957c63ec426) for details on our code of conduct, and the process for submitting pull requests to us.
-
-## Versioning
-
-We use [SemVer](http://semver.org/) for versioning. For the versions available, see the [tags on this repository](https://github.com/your/project/tags). 
-
-## Authors
-
-* **Billie Thompson** - *Initial work* - [PurpleBooth](https://github.com/PurpleBooth)
-
-See also the list of [contributors](https://github.com/your/project/contributors) who participated in this project.
-
-## License
-
-This project is licensed under the MIT License - see the [LICENSE.md](LICENSE.md) file for details
-
-## Acknowledgments
-
-* Hat tip to anyone whose code was used
-* Inspiration
-* etc
-
